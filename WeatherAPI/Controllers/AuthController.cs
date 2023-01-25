@@ -20,6 +20,11 @@ namespace WeatherAPI.Controllers
         {
             return Ok(await _authService.Register(request));    
         }
+        [HttpPost("Register_Admin")]
+        public async Task<IActionResult> RegisterAdmin(UserDto request)
+        {
+            return Ok(await _authService.RegisterAdmin(request));
+        }
 
         [HttpPost("Login")]
         public async Task<IActionResult> Login(UserDto request)

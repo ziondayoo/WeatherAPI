@@ -7,5 +7,6 @@ namespace WeatherAPI.WeatherDomain.Core.Services
     {
         Task<ResponseDto<string>> Login(UserDto request);
         Task<ResponseDto<User>> Register(UserDto request);
+        Task<ResponseDto<User>> RegisterAdmin(UserDto request);
     }
 }

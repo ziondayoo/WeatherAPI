@@ -11,7 +11,7 @@ namespace WeatherAPI.WeatherDomain.Core.Services
     public class AuthService : IAuthService
     {
         private readonly IConfiguration _configuration;
-        private readonly List<User> _users = new List<User>();
+        private static List<User> _users = new List<User>();
 
         public AuthService(IConfiguration configuration)
         {
@@ -31,7 +31,28 @@ namespace WeatherAPI.WeatherDomain.Core.Services
                 Id = Guid.NewGuid(),
                 Email = request.Email,
                 PasswordHash = passwordHash,
-                PasswordSalt = passwordSalt
+                PasswordSalt = passwordSalt,
+                Role = "User" 
+            };
+            _users.Add(user);
+            return ResponseDto<User>.Success("You have successfully Registered", user, (int)HttpStatusCode.OK);
+        }
+        public async Task<ResponseDto<User>> RegisterAdmin(UserDto request)
+        {
+            var ToCheckIfEmailAlreadlyExist = _users.Where(x => x.Email == request.Email)
+                .FirstOrDefault();
+            if (ToCheckIfEmailAlreadlyExist is not null)
+            {
+                return ResponseDto<User>.Fail("This Email already exist", (int)HttpStatusCode.BadRequest);
+            }
+            ToCreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
+            var user = new User
+            {
+                Id = Guid.NewGuid(),
+                Email = request.Email,
+                PasswordHash = passwordHash,
+                PasswordSalt = passwordSalt,
+                Role = "Admin"
             };
             _users.Add(user);
             return ResponseDto<User>.Success("You have successfully Registered", user, (int)HttpStatusCode.OK);
@@ -47,16 +68,16 @@ namespace WeatherAPI.WeatherDomain.Core.Services
             {
                 return ResponseDto<string>.Fail("Password Incorrect", (int)HttpStatusCode.BadRequest);
             }
-            string token = ToCreateToken(user);
+            string token = ToCreateToken(user, user.Role);
             return ResponseDto<string>.Success("You've successfully Logged in", token, (int)HttpStatusCode.OK);
         }
 
-        private string ToCreateToken(User user)
+        private string ToCreateToken(User user, string role)
         {
             List<Claim> claims = new List<Claim>
            {
                new Claim(ClaimTypes.Name, user.Email),
-               new Claim(ClaimTypes.Role, "Admin")
+               new Claim(ClaimTypes.Role, role)
            };
             var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes
                 (_configuration.GetSection("Jwt:Token").Value));
