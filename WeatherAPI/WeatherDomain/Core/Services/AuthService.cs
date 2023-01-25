@@ -2,6 +2,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using WeatherAPI.WeatherDomain.Dtos;
 using WeatherAPI.WeatherDomain.Models;
 
@@ -73,12 +74,20 @@ namespace WeatherAPI.WeatherDomain.Core.Services
 
         private bool ToVerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
         {
-            throw new NotImplementedException();
+            using (var hmac = new HMACSHA512(passwordSalt))
+            {
+                var computedHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+                return computedHash.SequenceEqual(passwordHash);
+            }
         }
 
         private void ToCreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
         {
-            throw new NotImplementedException();
+            using (var hmac = new HMACSHA512())
+            {
+                passwordSalt = hmac.Key;
+                passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+            }
         }
     }
 }
